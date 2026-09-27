@@ -1,0 +1,357 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DatePrecision {
+  EXACT
+  APPROXIMATE
+  YEAR_ONLY
+  UNKNOWN
+}
+
+enum MemberStatus {
+  LIVING
+  DECEASED
+  UNKNOWN
+  ARCHIVED
+}
+
+enum RelationshipType {
+  BIOLOGICAL
+  ADOPTIVE
+  STEP
+  UNKNOWN
+}
+
+enum MarriageStatus {
+  ACTIVE
+  ENDED
+  DIVORCED
+  WIDOWED
+  UNKNOWN
+}
+
+enum ImportantDateType {
+  BIRTHDAY
+  WEDDING_ANNIVERSARY
+  DEATH_ANNIVERSARY
+  CUSTOM
+}
+
+enum FamilyStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum EventType {
+  WEDDING
+  REUNION
+  GATHERING
+  MEMORIAL
+  MEETING
+  HISTORICAL_EVENT
+  CUSTOM
+}
+
+model Family {
+  id          String       @id @default(uuid())
+  name        String       @db.VarChar(150)
+  description String?
+  status      FamilyStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String?
+  updatedBy   String?
+
+  members        FamilyMember[]
+  parentChild    ParentChildRelationship[]
+  marriages      Marriage[]
+  photos         Photo[]
+  documents      Document[]
+  importantDates ImportantDate[]
+  events         Event[]
+  userAccess     UserFamilyAccess[]
+  auditLogs      AuditLog[]
+
+  @@index([name])
+  @@index([status])
+}
+
+model FamilyMember {
+  id                 String        @id @default(uuid())
+  familyId           String
+  fullName           String?       @db.VarChar(200)
+  gender             String?       @db.VarChar(20)
+  dateOfBirth        DateTime?     @db.Date
+  birthDatePrecision DatePrecision @default(UNKNOWN)
+  birthPlace         String?
+  dateOfDeath        DateTime?     @db.Date
+  deathDatePrecision DatePrecision @default(UNKNOWN)
+  deathPlace         String?
+  occupation         String?       @db.VarChar(200)
+  education          String?
+  phone              String?       @db.VarChar(50)
+  email              String?       @db.VarChar(255)
+  address            String?
+  biography          String?
+  notes              String?
+  profilePhotoId     String?
+  status             MemberStatus  @default(LIVING)
+  isArchived         Boolean       @default(false)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  createdBy          String?
+  updatedBy          String?
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Restrict)
+
+  parentLinks ParentChildRelationship[] @relation("ParentChildParent")
+  childLinks  ParentChildRelationship[] @relation("ParentChildChild")
+
+  marriagePerson1 Marriage[] @relation("MarriagePerson1")
+  marriagePerson2 Marriage[] @relation("MarriagePerson2")
+
+  photos         Photo[]
+  documents      Document[]
+  importantDates ImportantDate[]
+
+  @@index([familyId])
+  @@index([status])
+  @@index([fullName])
+  @@index([dateOfBirth])
+  @@index([dateOfDeath])
+  @@index([familyId, fullName])
+  @@map("FamilyMember")
+}
+
+model ParentChildRelationship {
+  id               String           @id @default(uuid())
+  familyId         String
+  parentId         String
+  childId          String
+  relationshipType RelationshipType @default(BIOLOGICAL)
+  notes            String?
+  createdAt        DateTime         @default(now())
+  createdBy        String?
+
+  family Family       @relation(fields: [familyId], references: [id], onDelete: Restrict)
+  parent FamilyMember @relation("ParentChildParent", fields: [parentId], references: [id], onDelete: Restrict)
+  child  FamilyMember @relation("ParentChildChild", fields: [childId], references: [id], onDelete: Restrict)
+
+  @@unique([familyId, parentId, childId, relationshipType])
+  @@index([familyId])
+  @@index([parentId])
+  @@index([childId])
+}
+
+model Marriage {
+  id                    String         @id @default(uuid())
+  familyId              String
+  person1Id             String
+  person2Id             String
+  marriageDate          DateTime?      @db.Date
+  marriageDatePrecision DatePrecision  @default(UNKNOWN)
+  marriagePlace         String?
+  endDate               DateTime?      @db.Date
+  endDatePrecision      DatePrecision  @default(UNKNOWN)
+  status                MarriageStatus @default(ACTIVE)
+  notes                 String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  createdBy             String?
+  updatedBy             String?
+
+  family  Family       @relation(fields: [familyId], references: [id], onDelete: Restrict)
+  person1 FamilyMember @relation("MarriagePerson1", fields: [person1Id], references: [id], onDelete: Restrict)
+  person2 FamilyMember @relation("MarriagePerson2", fields: [person2Id], references: [id], onDelete: Restrict)
+
+  @@index([familyId])
+  @@index([person1Id])
+  @@index([person2Id])
+  @@index([status])
+}
+
+model Photo {
+  id              String   @id @default(uuid())
+  familyId        String
+  memberId        String?
+  fileName        String   @db.VarChar(255)
+  description     String?
+  storageUrl      String
+  storagePublicId String?  @db.VarChar(255)
+  uploadedBy      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  family Family        @relation(fields: [familyId], references: [id], onDelete: Restrict)
+  member FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([familyId])
+  @@index([memberId])
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  familyId    String
+  memberId    String?
+  title       String   @db.VarChar(200)
+  fileName    String   @db.VarChar(255)
+  fileType    String?  @db.VarChar(100)
+  fileSize    BigInt?
+  storageUrl  String
+  description String?
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  family Family        @relation(fields: [familyId], references: [id], onDelete: Restrict)
+  member FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([familyId])
+  @@index([memberId])
+}
+
+model ImportantDate {
+  id            String            @id @default(uuid())
+  familyId      String
+  memberId      String?
+  title         String            @db.VarChar(200)
+  date          DateTime?         @db.Date
+  datePrecision DatePrecision     @default(UNKNOWN)
+  type          ImportantDateType @default(CUSTOM)
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  family Family        @relation(fields: [familyId], references: [id], onDelete: Restrict)
+  member FamilyMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([familyId])
+  @@index([memberId])
+  @@index([type])
+  @@index([date])
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  familyId    String
+  title       String    @db.VarChar(200)
+  type        EventType @default(CUSTOM)
+  eventDate   DateTime? @db.Timestamptz
+  location    String?
+  description String?
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  family Family @relation(fields: [familyId], references: [id], onDelete: Restrict)
+
+  @@index([familyId])
+  @@index([eventDate])
+  @@index([type])
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique @db.VarChar(255)
+  passwordHash String
+  fullName     String     @db.VarChar(200)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  roles        UserRole[]
+  familyAccess UserFamilyAccess[]
+  auditLogs    AuditLog[]
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(60)
+  description String?
+  createdAt   DateTime @default(now())
+
+  users              UserRole[]
+  permissions        RolePermission[]
+  userFamilyAccesses UserFamilyAccess[]
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  name        String  @unique @db.VarChar(100)
+  description String?
+
+  roles RolePermission[]
+}
+
+model UserRole {
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Restrict)
+
+  @@id([roleId, permissionId])
+}
+
+model UserFamilyAccess {
+  id        String   @id @default(uuid())
+  userId    String
+  familyId  String
+  roleId    String?
+  grantedAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  role   Role?  @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, familyId])
+  @@index([userId])
+  @@index([familyId])
+  @@index([roleId])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String   @db.VarChar(80)
+  entityType String   @db.VarChar(100)
+  entityId   String?
+  familyId   String?
+  timestamp  DateTime @default(now())
+  oldValues  Json?
+  newValues  Json?
+  metadata   Json?
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  family Family? @relation(fields: [familyId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([entityType])
+  @@index([timestamp])
+}

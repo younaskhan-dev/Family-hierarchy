@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Family Hierarchy preview">
+  <defs>
+    <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#0b2433"/>
+      <stop offset="100%" stop-color="#0f5a62"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0%" x2="100%" y1="0%" y2="100%">
+      <stop offset="0%" stop-color="#f6f1ee"/>
+      <stop offset="100%" stop-color="#edf5f0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="170" cy="120" r="110" fill="#1f9d8a" opacity="0.25"/>
+  <circle cx="1040" cy="500" r="170" fill="#d6a05d" opacity="0.15"/>
+  <rect x="120" y="105" width="960" height="420" rx="28" fill="url(#card)" opacity="0.96"/>
+  <text x="180" y="190" font-size="26" font-family="Arial, sans-serif" font-weight="700" fill="#335763" letter-spacing="5">FAMILY HIERARCHY</text>
+  <text x="180" y="290" font-size="86" font-family="Arial, sans-serif" font-weight="800" fill="#132a37">Family</text>
+  <text x="180" y="382" font-size="86" font-family="Arial, sans-serif" font-weight="800" fill="#132a37">Legacy</text>
+  <text x="180" y="445" font-size="30" font-family="Arial, sans-serif" fill="#49657a">Preserve your family story, relationships, and memories.</text>
+  <g transform="translate(760 160)">
+    <circle cx="0" cy="0" r="44" fill="#0d2d3f"/>
+    <circle cx="-78" cy="70" r="34" fill="#dfe8ea"/>
+    <circle cx="78" cy="70" r="34" fill="#dfe8ea"/>
+    <path d="M-112 154c18-50 54-76 112-76 58 0 94 26 112 76" fill="none" stroke="#26806d" stroke-width="18" stroke-linecap="round"/>
+    <circle cx="0" cy="-12" r="24" fill="#e7f7ee"/>
+  </g>
+</svg>
