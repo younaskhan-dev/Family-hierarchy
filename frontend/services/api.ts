@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://family-hierarchy.onrender.com/api';
 
 const toUrl = (path: string, params?: Record<string, string | undefined>) => {
   const normalizedPath = path.replace(/^\/+/, '');
